@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#f4efe4">
 <title>Планировщик</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -17,10 +17,13 @@
 :root{--bg:#f4efe4;--sf:#fbf8f1;--bd:#ddd3bf;--ln:#cfc4ac;--tx:#2a2622;--mu:#7a7165;--rd:#b3262d;--on:#fbf8f1;--tb:#ece5d4;--cw:#2f5577;--cwb:#8aa6bf;--cm:#2c6b6b;--cmb:#8fb8b8;--cs:#3d6a42;--csb:#9ab99d;--cf:#8a6a1f;--cfb:#cbb176;--cd:#a3202a;--cdb:#d49a9d}
 :root.dk{--bg:#121110;--sf:#1b1a18;--bd:#34322f;--ln:#3a3836;--tx:#ece6d9;--mu:#8a8379;--rd:#c1272d;--on:#f3ece0;--tb:#0d0c0b;--cw:#7fa0c0;--cwb:#4a6580;--cm:#6fb3b3;--cmb:#3f7070;--cs:#8fb593;--csb:#4f6e53;--cf:#d1b074;--cfb:#7a6636;--cd:#e0575c;--cdb:#8a2a2e}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
-#app{max-width:520px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 14px 96px}
+html{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+body{margin:0;position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
+input,textarea{-webkit-user-select:text;user-select:text}
+#app{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pg{max-width:520px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 14px 24px}
 button,input,select,textarea{font:inherit;color:var(--tx)}
-input,select,textarea{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:3px;padding:10px;outline:none}
+input,select,textarea{width:100%;font-size:16px;background:var(--sf);border:1px solid var(--bd);border-radius:3px;padding:10px;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--rd)}
 textarea{resize:vertical;min-height:90px}
 label{display:block;font-size:12px;color:var(--mu);margin:12px 0 4px}
@@ -51,7 +54,7 @@ h1{font-family:'Noto Serif',Georgia,serif;font-size:24px;font-weight:500;margin:
 .row{display:flex;gap:8px;align-items:center}
 .row>*{flex:1}
 .row>.fx{flex:none}
-.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tb);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.tabs{flex:none;position:relative;background:var(--tb);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
 .tabs>div{display:flex;width:100%;max-width:520px}
 .tabs button{flex:1;border:none;background:transparent;font-size:10px;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0 8px;cursor:pointer}
 .tabs button b{font-family:'Noto Serif',serif;font-weight:400;font-size:20px;line-height:1.2}
@@ -417,7 +420,8 @@ function render(){
  var v=UI.view,h='';
  if(v==='today')h=vToday();else if(v==='inbox')h=vInbox();else if(v==='matrix')h=vMatrix();else if(v==='team')h=vTeamTab();else if(v==='money')h=vMoney();else h=vMore();
  var act=document.activeElement,keep=act&&act.id,sel=null;if(keep&&act.value!=null){sel=[act.value,act.selectionStart]}
- $('#app').innerHTML=h;
+ var sc=$('#app'),key=v+'|'+UI.more+'|'+UI.mx+'|'+UI.me,top=UI._k===key?sc.scrollTop:0;UI._k=key;
+ sc.innerHTML='<div class="pg">'+h+'</div>';sc.scrollTop=top;
  $('#tabs').innerHTML=TABS.map(function(t){return '<button class="'+(t[0]===v?'on':'')+'" data-act="nav" data-v="'+t[0]+'"><b>'+t[1]+'</b>'+t[2]+'</button>'}).join('');
  badge();
  if(keep&&sel&&$('#'+keep)&&UI.view!=='more'){var e=$('#'+keep);e.value=sel[0];e.focus();try{e.setSelectionRange(sel[1],sel[1])}catch(x){}}
@@ -567,7 +571,7 @@ document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b)return;var a=b.dataset.act,id=b.dataset.id;
  if(b.tagName==='A')e.preventDefault();
  switch(a){
- case 'nav':UI.view=b.dataset.v;closeSheet();render();window.scrollTo(0,0);break;
+ case 'nav':UI.view=b.dataset.v;closeSheet();render();$('#app').scrollTop=0;break;
  case 'tg':e.stopPropagation();toggleTask(id);break;
  case 'tr':{var r=S.rec.find(function(x){return x.id===id});if(r){r.log=r.log||{};var d=today();if(r.log[d])delete r.log[d];else r.log[d]=1;touch(r);save();render()}break}
  case 'et':taskSheet(id);break;
