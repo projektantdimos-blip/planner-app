@@ -247,7 +247,7 @@ function vToday(){
 
 function vInbox(){
  var h=head('声','Входящие','Говорите всё подряд, разберём потом');
- h+='<button class="mic" data-act="mic" data-for="inb" aria-label="Записать голос">声</button><p class="lb" style="text-align:center" id="micst">Нажмите и диктуйте</p>';
+ h+='<button class="mic" data-act="mic" data-for="inb" aria-label="Записать голос">声</button><p class="lb" style="text-align:center" id="micst">'+(vmode()==='kb'?'Нажмите значок микрофона на клавиатуре телефона':'Нажмите и диктуйте')+'</p>';
  h+='<label>Текст</label><textarea id="inb" placeholder="Позвонить заказчику по ТЦ, завтра сдача АПС. Записаться к врачу на анализы…">'+esc(UI.inbox)+'</textarea>';
  h+='<div class="row" style="margin-top:10px"><button class="btn" data-act="parse">'+(UI.busy==='parse'?'Разбираю…':'Разобрать с Claude')+'</button><button class="btn2" data-act="parselocal">Без Claude</button></div>';
  if(UI.prop.length){h+='<div class="rh">Предложенный разбор</div>';
@@ -337,6 +337,7 @@ function vSet(){
  h+='<label>Категории расходов проектной</label><textarea data-set="cats.pr" style="min-height:60px">'+esc(S.set.cats.pr)+'</textarea><label>Категории расходов монтажной</label><textarea data-set="cats.mo" style="min-height:60px">'+esc(S.set.cats.mo)+'</textarea>';
  h+='<div class="rh">Команда и цели недели</div><label>Роли в команде через запятую</label><textarea data-set="team" style="min-height:60px">'+esc(S.set.team)+'</textarea>'+inp('Часы работы в неделю','tgt.work','number')+inp('Часы спорта в неделю','tgt.sport','number')+inp('Часы семьи в неделю','tgt.family','number')+inp('Цель по объектам на ТО','to.tgt','number');
  h+='<div class="rh">Уведомления на телефоне</div>'+inp('Утренняя сводка, время','morning','time')+inp('Напоминать заранее, минут','lead','number')+inp('Часовой пояс','tz','text','Europe/Moscow')+pushBlock();
+ h+='<div class="rh">Диктовка на этом устройстве</div><label>Как диктовать</label><select data-set="$voice">'+[['auto','Автоматически'],['kb','Клавиатура телефона, без запросов'],['app','Микрофон приложения']].map(function(x){return '<option value="'+x[0]+'" '+((SEC.voice||'auto')===x[0]?'selected':'')+'>'+x[1]+'</option>'}).join('')+'</select><p class="lb" style="margin-top:6px">На iPhone приложение с экрана «Домой» каждый раз спрашивает доступ к микрофону, это правило iOS. Диктовка клавиатурой этого запроса не вызывает.</p>';
  h+='<div class="rh">Claude</div>'+inp('Ключ API Anthropic (хранится только на этом устройстве)','$key','password','sk-ant-…')+inp('Модель','$model');
  h+='<div class="rh">GitHub, общая база</div>'+inp('Токен доступа (только на этом устройстве)','$gh','password','github_pat_…')+inp('Репозиторий данных (владелец/имя)','$repo','text','ivan/planner-data')+inp('Файл данных','$path');
  h+='<div class="chk"><input type="checkbox" id="sm" '+(S.set.syncMoney?'checked':'')+'><label for="sm" style="margin:0;font-size:14px;color:var(--tx)">Синхронизировать деньги через GitHub</label></div><p class="lb">Выключено: выписки и операции остаются только на этом устройстве.</p>';
@@ -553,7 +554,9 @@ async function doUpload(){
 
 /* voice */
 var REC=null;
+function vmode(){return SEC.voice&&SEC.voice!=='auto'?SEC.voice:(/iPhone|iPad|iPod/.test(navigator.userAgent)?'kb':'app')}
 function voice(btn,id){
+ if(vmode()==='kb'){var ek=$('#'+id);if(ek){ek.focus();toast('Нажмите значок микрофона на клавиатуре и диктуйте')}return}
  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){toast('Этот браузер не умеет диктовку. Нажмите микрофон на клавиатуре телефона');var e0=$('#'+id);if(e0)e0.focus();return}
  if(REC){REC.stop();return}
